@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout ll_setting,ll_main,ll_subscribe;
     private Button btn_publish_topic, btn_subscribe_topic, btn_connect_server,btn_clean_topic;
     private RecyclerView rv_device_list,rv_subscribe_list;
+    private SeekBar sb_pwm;
     private List<SmartDevice> smartDeviceList=new ArrayList<>();
     private List<Subscribe> subscribeList=new ArrayList<>();
     private SubscribeAdapter subscribeAdapter;
@@ -45,19 +47,34 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onMessageArrived(final String topic, final String payload) {
+            StringBuilder sb=new StringBuilder();
+            char payloadArray[]=payload.toCharArray();
+            for(int i=0;i<payload.length();i++){
+                if(payloadArray[i]>=0x20&&payloadArray[i]<=0x7E){
+                    sb.append(payloadArray[i]);
+                }
+            }
+            String cleanMessage=sb.toString();
             if(topic.contains(MqttParams.TOPIC_LED_STATUS)){
-                subscribeList.get(0).setMessage(payload);
+                if(cleanMessage.contains("on")){
+                    subscribeList.get(0).setMessage("LED当前状态:开启");
+                }else {
+                    subscribeList.get(0).setMessage("LED当前状态:关闭");
+                }
+
             }else if(topic.contains(MqttParams.TOPIC_DHT11_STATUS)){
-                subscribeList.get(1).setMessage(payload);
-            }else if(topic.contains(MqttParams.TOPIC_VOLTAGE_STATUS)){
-                subscribeList.get(2).setMessage(payload);
+                String temp=cleanMessage.substring(cleanMessage.indexOf("tmp")+4,cleanMessage.indexOf("hum")-1);
+                String humi=cleanMessage.substring(cleanMessage.indexOf("hum")+4);
+                subscribeList.get(1).setMessage("当前温度："+temp+"℃\t当前湿度："+humi+"%");
             }else if(topic.contains(MqttParams.TOPIC_PWM_STATUS)){
-                subscribeList.get(3).setMessage(payload);
+                String duty=cleanMessage.substring(cleanMessage.lastIndexOf(":")+1);
+                subscribeList.get(2).setMessage("当前占空比:"+duty+"%");
             }
 
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+
                     tv_topic_message.setText(topic + ":" + payload);
                     subscribeAdapter.notifyDataSetChanged();
                 }
@@ -120,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
         ll_main=(LinearLayout)findViewById(R.id.ll_main);
         ll_subscribe=(LinearLayout)findViewById(R.id.ll_subscribe);
         tv_topic_message = (TextView) findViewById(R.id.tv_topic_message);
+        sb_pwm=(SeekBar)findViewById(R.id.sb_pwm);
         et_publish_topic = (EditText) findViewById(R.id.et_publish_topic);
         et_publish_topic_payload = (EditText) findViewById(R.id.et_publish_topic_payload);
         et_subscribe_topic = (EditText) findViewById(R.id.et_subscribe_topic);
@@ -174,6 +192,24 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        sb_pwm.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int mProgress=0;
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mProgress=progress;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                mqttManager.publish(MqttParams.TOPIC_PWM,"pwm:"+(1000+mProgress),false,0);
+            }
+        });
+
     }
 
     private void showAllDevice(){
@@ -195,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
         }
         smartDeviceList.add(new SmartDevice("室内灯光","主卧",R.mipmap.caramera,1,new SmartDeviceMqttInfo(MqttParams.TOPIC_LED,MqttParams.CMD_LED_ON,MqttParams.CMD_LED_OFF)));
         smartDeviceList.add(new SmartDevice("温湿度","客厅",R.mipmap.temp,1,new SmartDeviceMqttInfo(MqttParams.TOPIC_DHT11,MqttParams.CMD_DHT11_ON,MqttParams.CMD_DHT11_OFF)));
-        smartDeviceList.add(new SmartDevice("电压检测","客厅",R.mipmap.voltage,1,new SmartDeviceMqttInfo(MqttParams.TOPIC_VOLTAGE,MqttParams.CMD_VOLTAGE_ON,MqttParams.CMD_VOLTAGE_OFF)));
+        //smartDeviceList.add(new SmartDevice("电压检测","客厅",R.mipmap.voltage,1,new SmartDeviceMqttInfo(MqttParams.TOPIC_VOLTAGE,MqttParams.CMD_VOLTAGE_ON,MqttParams.CMD_VOLTAGE_OFF)));
         smartDeviceList.add(new SmartDevice("PWM调光","主卧",R.mipmap.light,1,new SmartDeviceMqttInfo(MqttParams.TOPIC_PWM,MqttParams.CMD_PWM_DUTY,MqttParams.CMD_PWM_DUTY)));
     }
 
@@ -215,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
 
         subscribeList.add(new Subscribe(MqttParams.TOPIC_LED_STATUS,"暂无",false));
         subscribeList.add(new Subscribe(MqttParams.TOPIC_DHT11_STATUS,"暂无",false));
-        subscribeList.add(new Subscribe(MqttParams.TOPIC_VOLTAGE_STATUS,"暂无",false));
+        //subscribeList.add(new Subscribe(MqttParams.TOPIC_VOLTAGE_STATUS,"暂无",false));
         subscribeList.add(new Subscribe(MqttParams.TOPIC_PWM_STATUS,"暂无",false));
 
 

@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/backgroundGray"
+    android:background="@mipmap/main_background"
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -19,6 +19,23 @@
             android:id="@+id/rv_device_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"></android.support.v7.widget.RecyclerView>
+        <SeekBar
+            android:layout_margin="5dp"
+            android:id="@+id/sb_pwm"
+            android:backgroundTint="@color/white"
+            android:layout_width="match_parent"
+            android:layout_height="40dp" />
+        <TextView
+
+            android:text="拖动改变灯光亮度"
+            android:textSize="20dp"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/white"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:id="@+id/tv_pwm_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
     </LinearLayout>
 
@@ -139,7 +156,7 @@
                 android:layout_height="wrap_content" />
             <EditText
                 android:inputType="textPassword"
-                android:text="12345678"
+                android:text="zr2014520"
                 android:id="@+id/et_password"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
@@ -168,6 +185,17 @@
             android:layout_height="wrap_content" />
 
     </LinearLayout>
+    <TextView
+        android:text="东南大学-嵌入式系统实训"
+
+        android:textColor="@color/black"
+        android:layout_above="@+id/navigation"
+        android:gravity="center_horizontal"
+        android:layout_marginBottom="40dp"
+        android:textSize="20dp"
+        android:id="@+id/tv_copyright"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 
 
